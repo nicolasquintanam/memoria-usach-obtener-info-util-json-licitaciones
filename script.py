@@ -1,19 +1,56 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 
-
+def reemplazoAux(entrada):
+    entrada = entrada.replace("1  \"","1,  \"")
+    entrada = entrada.replace("2  \"","2,  \"")
+    entrada = entrada.replace("3  \"","3,  \"")
+    entrada = entrada.replace("4  \"","4,  \"")
+    entrada = entrada.replace("5  \"","5,  \"")
+    entrada = entrada.replace("6  \"","6,  \"")
+    entrada = entrada.replace("7  \"","7,  \"")
+    entrada = entrada.replace("8  \"","8,  \"")
+    entrada = entrada.replace("9  \"","9,  \"")
+    entrada = entrada.replace("0  \"","0,  \"")
+    entrada = entrada.replace("1   \"","1,  \"")
+    entrada = entrada.replace("2   \"","2,  \"")
+    entrada = entrada.replace("3   \"","3,  \"")
+    entrada = entrada.replace("4   \"","4,  \"")
+    entrada = entrada.replace("5   \"","5,  \"")
+    entrada = entrada.replace("6   \"","6,  \"")
+    entrada = entrada.replace("7   \"","7,  \"")
+    entrada = entrada.replace("8   \"","8,  \"")
+    entrada = entrada.replace("9   \"","9,  \"")
+    entrada = entrada.replace("0   \"","0,  \"")
+    entrada = entrada.replace("null  \"","null,  \"")
+    entrada = entrada.replace("}  \"","},  \"")
+    entrada = entrada.replace("]  \"","],  \"")
+    entrada = entrada.replace("}  {","},  {")
+    entrada = entrada.replace("\"       \"","\",       \"")
+    return entrada
 
 size = 1
-df = pd.read_csv("c:/personal/historicoJsonLicitaciones.csv", chunksize=size)
+df = pd.read_csv("c:/Personal/historicoJsonLicitaciones.csv", chunksize=size)
 
+i = 0
 for linea in df:
     dataframe1 = linea
-    break
+    i = i + 1
+    if(i == 1):
+        break
 
-# En la variable dataframe1 queda el primer dataframe 
+
+
+# En la variable dataframe1 queda el primer dataframe
 dfString = dataframe1.to_string()
+#print("paso 1:\n")
+#print(dfString)
 # Ahora en dfString queda el primer dataframe como string
+
 listadoLineasPrimerDF = dfString.split('\n')
+#print("paso 2:\n")
+#print(listadoLineasPrimerDF)
+
 # Ahora se tiene un listado de dos líneas en listadoLineasPrimerDF
 # listadoLineasPrimerDF[0] = id;detalleJson;link
 # listadoLineasPrimerDF[1] = idLicitacion1;detalleJson1;linkLicitacion1
@@ -46,4 +83,5 @@ jsonPelado = jsonPelado.replace("\"  \"", "\", \"")
 # "Obras": 0  "Estado": "Adjudicada"  "Etapas": 1
 # Por lo tanto, ya no sirve el reemplazar "  " por ", "
 # Se hará un método para reemplazar un número (del 0 al 9) que después tenga dos espacios y una comilla doble, por el número + "," + " " + comilla doble
+jsonPelado = reemplazoAux(jsonPelado)
 print(jsonPelado)
