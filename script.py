@@ -1,6 +1,21 @@
 # -*- coding: utf-8 -*-
+# -- Librerías necesarias --
 import pandas as pd
+import json
 
+# Función que permite validar el formato de un json.
+# Entrada: string que se validará.
+# Salida: booleano indicando si es válido o no.
+def esValidoJson(jsonString):
+    try:
+        json.loads(jsonString)
+        return True
+    except ValueError as error:
+        return False
+
+# Función que permite reemplazar carácteres hasta ahora necesarios para la obtención de un json válido.
+# Entrada: string del json que será reemplazado.
+# Salida: el mismo string que se da por entrada, pero reemplazando los caracteres necesarios.
 def reemplazoAux(entrada):
     entrada = entrada.replace("1  \"","1,  \"")
     entrada = entrada.replace("2  \"","2,  \"")
@@ -29,7 +44,11 @@ def reemplazoAux(entrada):
     entrada = entrada.replace("\"       \"","\",       \"")
     return entrada
 
+# Función que permite obtener el json a partir de la ruta donde se encuentra el CSV y el json que se quiere obtener.
+# Entrada: un string que indica la ruta donde se encuentra el csv y el número de json que se quiere obtener.
+# Salida: un string con el json obtenido.
 def obtenerJson(rutaHistorico, numero):
+    numero = int(numero)
     size = 1
     df = pd.read_csv(rutaHistorico, chunksize=size)
     i = 0
@@ -40,13 +59,9 @@ def obtenerJson(rutaHistorico, numero):
         i = i + 1
     # En la variable dataframe1 queda el primer dataframe
     dfString = dataframe1.to_string()
-    #print("paso 1:\n")
-    #print(dfString)
     # Ahora en dfString queda el primer dataframe como string
 
     listadoLineasPrimerDF = dfString.split('\n')
-    #print("paso 2:\n")
-    #print(listadoLineasPrimerDF)
 
     # Ahora se tiene un listado de dos líneas en listadoLineasPrimerDF
     # listadoLineasPrimerDF[0] = id;detalleJson;link
@@ -83,4 +98,13 @@ def obtenerJson(rutaHistorico, numero):
     jsonPelado = reemplazoAux(jsonPelado)
     return jsonPelado
 
-print(obtenerJson("c:/personal/historicoJsonLicitaciones.csv", 5))
+
+
+#ruta = input("Por favor ingresar la ruta donde se encuentra el CSV\nRuta: ")
+ruta = "C:/personal/historicoJsonLicitaciones.csv"
+lineaQueSeQuiereObtener = input("Ingresar json que se quiere obtener.\nNúmero: ")
+
+jsonObtenido = obtenerJson(ruta, lineaQueSeQuiereObtener)
+print(jsonObtenido)
+
+print("El json mostrado tiene un formato válido" if esValidoJson(jsonObtenido) else "El json mostrado no tiene un formato válido")
