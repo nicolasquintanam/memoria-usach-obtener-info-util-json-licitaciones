@@ -2,6 +2,7 @@
 # -- Librerías necesarias --
 import pandas as pd
 import json
+import xlsxwriter
 
 # Función que permite validar el formato de un json.
 # Entrada: string que se validará.
@@ -73,8 +74,8 @@ def obtenerJson(rutaHistorico, numero):
     # listadoColumnasPrimerDF[2] = Link de la licitación
     #print("ID DE LICITACIÓN 1")
     #print(listadoColumnasPrimerDF[0].strip())
-    #print("JSON DE LICITACIÓN 1")
-    #print(listadoColumnasPrimerDF[1].strip())
+    print("JSON DE LICITACIÓN 1")
+    print(str(len(listadoColumnasPrimerDF[1].strip())))
     #print("LINK DE LICITACIÓN 1")
     #print(listadoColumnasPrimerDF[2].strip())
 
@@ -98,13 +99,64 @@ def obtenerJson(rutaHistorico, numero):
     jsonPelado = reemplazoAux(jsonPelado)
     return jsonPelado
 
+def ObtenerPrimerosJson(rutaHistorico, numero):
+    libro = xlsxwriter.Workbook('licitaciones.xlsx')
+    hoja = libro.add_worksheet()
+    numero = int(numero)
+    df = pd.read_csv(rutaHistorico, chunksize=1)
+    i = 0
+    hoja.write(0, 0, "ID")
+    hoja.write(0, 1, "JSON")
+    hoja.write(0, 2, "LINK")
+    hoja.write(0, 3, "VALIDO JSON")
+    for linea in df:
+        dataframe1 = linea
+        if(i == numero):
+            break
+        else:
+            dfString = dataframe1.to_string()
+            listadoLineasPrimerDF = dfString.split('\n')
+            listadoColumnasPrimerDF = listadoLineasPrimerDF[1].strip().split(';')
+            print(i)
+            idLicitacion = listadoColumnasPrimerDF[0].strip()
+            hoja.write(i+1, 0, idLicitacion)
 
+            jsonPelado = listadoColumnasPrimerDF[1].strip()[1:][:-1].strip()
+            jsonPelado = jsonPelado.replace("\"\"","\"")
+            jsonPelado = jsonPelado.replace("\"  \"", "\", \"")
+            jsonPelado = reemplazoAux(jsonPelado)
+            try:
+                if(not(esValidoJson(jsonPelado))):
+                    jsonPelado = jsonPelado + listadoColumnasPrimerDF[2].strip()
+                    jsonPelado = jsonPelado.replace("\"\"","\"")
+                    jsonPelado = jsonPelado.replace("\"  \"", "\", \"")
+                    jsonPelado = reemplazoAux(jsonPelado)
+            except:
+                j = 2
+            hoja.write(i+1, 1, jsonPelado)
+            try:
+                link = listadoColumnasPrimerDF[2].strip()
+                link = link.replace(" NaN", "")
+                link = link.strip()
+                hoja.write(i+1, 2, link)
+            except:
+                link = "http://www.mercadopublico.cl/Procurement/Modules/RFB/DetailsAcquisition.aspx?idlicitacion=" + idLicitacion
+                hoja.write(i+1, 2, link)
+            hoja.write(i+1, 3, esValidoJson(jsonPelado))
+        i = i + 1
+    libro.close()
 
 #ruta = input("Por favor ingresar la ruta donde se encuentra el CSV\nRuta: ")
 ruta = "C:/personal/historicoJsonLicitaciones.csv"
 lineaQueSeQuiereObtener = input("Ingresar json que se quiere obtener.\nNúmero: ")
 
-jsonObtenido = obtenerJson(ruta, lineaQueSeQuiereObtener)
-print(jsonObtenido)
 
-print("El json mostrado tiene un formato válido" if esValidoJson(jsonObtenido) else "El json mostrado no tiene un formato válido")
+
+
+
+#jsonObtenido = obtenerJson(ruta, lineaQueSeQuiereObtener)
+#print(jsonObtenido)
+#print("El json mostrado tiene un formato válido" if esValidoJson(jsonObtenido) else "El json mostrado no tiene un formato válido")
+#print("largo del json: " + str(len(jsonObtenido)))
+
+ObtenerPrimerosJson(ruta, lineaQueSeQuiereObtener)
