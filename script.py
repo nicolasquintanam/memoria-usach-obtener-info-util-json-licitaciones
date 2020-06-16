@@ -146,6 +146,115 @@ def ObtenerPrimerosJson(rutaHistorico, numero):
         i = i + 1
     libro.close()
 
+def ObtenerPrimerosJson2(rutaHistorico, numero):
+    numero = int(numero)                            # Transformando el parámetro a número
+    df = pd.read_csv(rutaHistorico, chunksize=1)    # Crear un dataframe a partir del CSV
+    i = 0
+    libro = xlsxwriter.Workbook('licitaciones.xlsx')   # Se crea el excel
+    hoja = libro.add_worksheet()                       # Se añade una hoja el excel
+    negrita = libro.add_format({'bold': True})
+    centrar = libro.add_format({'align': 'center'})
+
+    hoja.write(0, 0, "ID", centrar)
+    hoja.write(0, 1, "JSON", centrar)                           # ---- Se crea la cabecera de la hoja --
+    hoja.write(0, 2, "LINK", centrar)                           # --------------------------------------
+    hoja.write(0, 3, "VALIDO JSON", centrar)                    #---------------------------------------
+    hoja.write(0, 5, "Categoría Item", centrar)
+    hoja.write(0, 6, "Descripción Item", centrar)
+    hoja.write(0, 7, "Nombre Solicitud", centrar)
+    hoja.write(0, 8, "Descripcion Solicitud", centrar)
+    hoja.write(0, 9, "Nombre unidad compradora", centrar)
+    hoja.write(0, 10, "Nombre organismo comprador", centrar)
+    hoja.write(0, 11, "Monto estimado", centrar)
+
+    for registro in df:                                # Por cada registro en el dataframe (CSV), arrojará esto:
+                                                       # ------------------------------------------------------------------------
+                                                       # ---------  "idLicitacion;json;linkJson  --------------------------------
+                                                       # ---------  3021-124-L119;{listado: {...;https://mercado"  --------------
+                                                       # ------------------------------------------------------------------------
+
+        registroString = registro.to_string()                       # Aquí se tiene lo anteriormente mencionado pero como string
+        listadoRegistroString = registroString.split('\n')          # Como están separados por un salto de línea, interesa sólo
+                                                                    # el segundo elemento, que es el que tiene la información
+        registroInformacion = listadoRegistroString[1].strip()  # Aquí se tiene sólo la parte "3021-124-L119;{listado: {...;https://mercado..."
+        listadoInformacion = registroInformacion.split(';')     # Aquí se separa lo anterior por ; para tener un listado.
+        largoListadoInfo = len(listadoInformacion)              # Aquí se tiene el largo de lo anterior, ya que puede darse el caso
+                                                                # que dentro del json (texto) tenga puntoycoma, o también puede darse el caso
+                                                                # que no contenga el link de acceso a información complementaria.
+
+        idLicitacion = listadoInformacion[0].strip()            # Si o si tiene el id de la licitación, por lo tanto,
+        hoja.write(i + 1, 0, idLicitacion)                      # se inserta en el excel
+        jsonLicitacion = ""
+        if(largoListadoInfo == 2):                              # Si tiene largo 2, quiere decir que no viene con el link
+            jsonLicitacion = listadoInformacion[1].strip()
+            # -----------------------------------------
+            # ----- PROCESO DE LIMPIEZA DE JSON -------
+            # -----------------------------------------
+            jsonLicitacion = jsonLicitacion[1:][:-1].strip()
+            jsonLicitacion = jsonLicitacion.replace("\"\"","\"")
+            jsonLicitacion = jsonLicitacion.replace("\"  \"", "\", \"")
+            jsonLicitacion = reemplazoAux(jsonLicitacion)
+            # -----------------------------------------
+            # ---- FIN PROCESO DE LIMPIEZA DE JSON ----
+            # -----------------------------------------
+            hoja.write(i + 1, 1, jsonLicitacion)                # Se inserta el json limpio en el excel
+            link = "http://www.mercadopublico.cl/Procurement/Modules/RFB/DetailsAcquisition.aspx?idlicitacion=" + idLicitacion
+            hoja.write(i + 1, 2, link)
+
+        if(largoListadoInfo == 3):                              # Si tiene largo 3, quiere decir que está en lo correcto
+            jsonLicitacion = listadoInformacion[1].strip()
+            # -----------------------------------------
+            # ----- PROCESO DE LIMPIEZA DE JSON -------
+            # -----------------------------------------
+            jsonLicitacion = jsonLicitacion[1:][:-1].strip()
+            jsonLicitacion = jsonLicitacion.replace("\"\"","\"")
+            jsonLicitacion = jsonLicitacion.replace("\"  \"", "\", \"")
+            jsonLicitacion = reemplazoAux(jsonLicitacion)
+            # -----------------------------------------
+            # ---- FIN PROCESO DE LIMPIEZA DE JSON ----
+            # -----------------------------------------
+            hoja.write(i + 1, 1, jsonLicitacion)                # Se inserta el json limpio en el excel
+            link = listadoInformacion[2].strip()
+            link = link.replace(" NaN", "")
+            link = link.strip()
+            hoja.write(i + 1, 2, link)
+
+        if(largoListadoInfo == 4):                              # Si tiene largo 4, quiere decir que el texto tiene un puntoycoma
+            jsonLicitacion = listadoInformacion[1] + listadoInformacion[2]
+            jsonLicitacion = jsonLicitacion.strip()
+            # -----------------------------------------
+            # ----- PROCESO DE LIMPIEZA DE JSON -------
+            # -----------------------------------------
+            jsonLicitacion = jsonLicitacion[1:][:-1].strip()
+            jsonLicitacion = jsonLicitacion.replace("\"\"","\"")
+            jsonLicitacion = jsonLicitacion.replace("\"  \"", "\", \"")
+            jsonLicitacion = reemplazoAux(jsonLicitacion)
+            # -----------------------------------------
+            # ---- FIN PROCESO DE LIMPIEZA DE JSON ----
+            # -----------------------------------------
+            hoja.write(i + 1, 1, jsonLicitacion)                # Se inserta el json limpio en el excel
+            link = listadoInformacion[3].strip()
+            link = link.replace(" NaN", "")
+            link = link.strip()
+            hoja.write(i + 1, 2, link)
+        
+        hoja.write(i + 1, 3, esValidoJson(jsonLicitacion))
+        if(esValidoJson(jsonLicitacion)):
+            jsonDatos = json.loads(jsonLicitacion)
+            hoja.write(i + 1, 5, jsonDatos['Listado'][0]['Items']['Listado'][0]['Categoria'])
+            hoja.write(i + 1, 6, jsonDatos['Listado'][0]['Items']['Listado'][0]['Descripcion'])
+            hoja.write(i + 1, 7, jsonDatos['Listado'][0]['Nombre'])
+            hoja.write(i + 1, 8, jsonDatos['Listado'][0]['Descripcion'])
+            hoja.write(i + 1, 9, jsonDatos['Listado'][0]['Comprador']['NombreUnidad'])
+            hoja.write(i + 1, 10, jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'])
+            hoja.write(i + 1, 11, jsonDatos['Listado'][0]['MontoEstimado'])
+
+        if(i == numero):
+            break
+        i = i + 1
+        print(i)
+    libro.close()
+
 #ruta = input("Por favor ingresar la ruta donde se encuentra el CSV\nRuta: ")
 ruta = "C:/personal/historicoJsonLicitaciones.csv"
 lineaQueSeQuiereObtener = input("Ingresar json que se quiere obtener.\nNúmero: ")
@@ -159,4 +268,4 @@ lineaQueSeQuiereObtener = input("Ingresar json que se quiere obtener.\nNúmero: 
 #print("El json mostrado tiene un formato válido" if esValidoJson(jsonObtenido) else "El json mostrado no tiene un formato válido")
 #print("largo del json: " + str(len(jsonObtenido)))
 
-ObtenerPrimerosJson(ruta, lineaQueSeQuiereObtener)
+ObtenerPrimerosJson2(ruta, lineaQueSeQuiereObtener)
