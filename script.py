@@ -80,6 +80,7 @@ def ObtenerInformacionRelevante(rutaHistorico, numero):
     hoja.write(0, 9, "Nombre unidad compradora", centrar)       
     hoja.write(0, 10, "Nombre organismo comprador", centrar)
     hoja.write(0, 11, "Monto estimado", centrar)
+    hoja.write(0, 12, "Cantidad Items", centrar)
 
                                                                 # ------------------------------------------------------------------------
     for registro in df:                                         # ---  Por cada registro en el dataframe (CSV), arrojará esto: -----------
@@ -92,7 +93,6 @@ def ObtenerInformacionRelevante(rutaHistorico, numero):
 
         listadoRegistroString = registroString.split('\n')      # Como están separados por un salto de línea, interesa sólo
                                                                 # el segundo elemento, que es el que tiene la información
-        hoja.write(i + 1, 15, len(listadoRegistroString))
 
 
         registroInformacion = listadoRegistroString[1]          # Aquí se tiene sólo la parte "3021-124-L119;{listado: {...;https://mercado..."
@@ -151,7 +151,7 @@ def ObtenerInformacionRelevante(rutaHistorico, numero):
                 categoriaItem = categoriaItem + jsonDatos['Listado'][0]['Items']['Listado'][k]['Categoria']
                 descripcionItem = descripcionItem + jsonDatos['Listado'][0]['Items']['Listado'][k]['Descripcion']
                 
-
+            hoja.write(i + 1, 12, cantidadItems)
             hoja.write(i + 1, 5, categoriaItem)
             hoja.write(i + 1, 6, descripcionItem)
             hoja.write(i + 1, 7, jsonDatos['Listado'][0]['Nombre'])
