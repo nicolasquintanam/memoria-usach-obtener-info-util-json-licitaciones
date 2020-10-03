@@ -49,6 +49,35 @@ def limpiarJson(entrada):
     entrada = entrada.replace("\"       \"","\",       \"")
     return entrada
 
+def quitarTildes(texto):
+    textoNuevo = texto
+    textoNuevo = textoNuevo.replace('á', 'a')
+    textoNuevo = textoNuevo.replace('é', 'e')
+    textoNuevo = textoNuevo.replace('í', 'i')
+    textoNuevo = textoNuevo.replace('ó', 'o')
+    textoNuevo = textoNuevo.replace('ú', 'u')
+    textoNuevo = textoNuevo.replace('Á', 'A')
+    textoNuevo = textoNuevo.replace('É', 'E')
+    textoNuevo = textoNuevo.replace('Í', 'I')
+    textoNuevo = textoNuevo.replace('Ó', 'O')
+    textoNuevo = textoNuevo.replace('Ú', 'U')
+    textoNuevo = textoNuevo.replace('à', 'a')
+    textoNuevo = textoNuevo.replace('è', 'e')
+    textoNuevo = textoNuevo.replace('ì', 'i')
+    textoNuevo = textoNuevo.replace('ò', 'o')
+    textoNuevo = textoNuevo.replace('ù', 'u') 
+    textoNuevo = textoNuevo.replace('À', 'A')
+    textoNuevo = textoNuevo.replace('È', 'E')
+    textoNuevo = textoNuevo.replace('Ì', 'I')
+    textoNuevo = textoNuevo.replace('Ò', 'O')
+    textoNuevo = textoNuevo.replace('Ù', 'U')
+    textoNuevo = textoNuevo.replace('ñ', 'n')
+    textoNuevo = textoNuevo.replace('Ñ', 'N')
+    textoNuevo = textoNuevo.replace('º', 'numero')
+    textoNuevo = textoNuevo.replace('°', 'numero')
+    
+    return textoNuevo
+
 # Función que permite limpiar el link que viene en el CSV con caracteres válidos.
 # Entrada: string del link que será limpiado.
 # Salida: el mismo link pero sin caracteres inválidos.
@@ -65,9 +94,11 @@ def ObtenerInformacionRelevante(rutaHistorico, numero):
     numero = int(numero)                                        # Transformando el parámetro a número
     df = pd.read_csv(rutaHistorico, chunksize=1)                # Crear un dataframe a partir del CSV
     i = 0
+    contador = 0
     libro = xlsxwriter.Workbook('licitaciones.xlsx')            # Se crea el excel
     hoja = libro.add_worksheet()                                # Se añade una hoja el excel
     centrar = libro.add_format({'align': 'center'})             # Se centran los títulos de las columnas
+    archivo = open('corpus.txt', 'w')
 
     hoja.write(0, 0, "ID", centrar)                             
     hoja.write(0, 1, "JSON", centrar)                           #-------------------------------------------
@@ -80,7 +111,7 @@ def ObtenerInformacionRelevante(rutaHistorico, numero):
     hoja.write(0, 9, "Nombre unidad compradora", centrar)       
     hoja.write(0, 10, "Nombre organismo comprador", centrar)
     hoja.write(0, 11, "Monto estimado", centrar)
-    hoja.write(0, 12, "Cantidad Items", centrar)
+    hoja.write(0, 12, "Fecha", centrar)
 
                                                                 # ------------------------------------------------------------------------
     for registro in df:                                         # ---  Por cada registro en el dataframe (CSV), arrojará esto: -----------
@@ -133,11 +164,12 @@ def ObtenerInformacionRelevante(rutaHistorico, numero):
                 linkLicitacion = "http://www.mercadopublico.cl/Procurement/Modules/RFB/DetailsAcquisition.aspx?idlicitacion=" + idLicitacion
             
         
-        hoja.write(i + 1, 0, idLicitacion)
-        hoja.write(i + 1, 1, jsonLicitacion)  
-        hoja.write(i + 1, 2, linkLicitacion)             
-        hoja.write(i + 1, 3, esValidoJson(jsonLicitacion))
+        
         if(esValidoJson(jsonLicitacion)):
+            hoja.write(contador + 1, 0, idLicitacion)
+            hoja.write(contador + 1, 1, jsonLicitacion)  
+            hoja.write(contador + 1, 2, linkLicitacion)             
+            hoja.write(contador + 1, 3, esValidoJson(jsonLicitacion))
             jsonDatos = json.loads(jsonLicitacion)
 
             cantidadItems = int(jsonDatos['Listado'][0]['Items']['Cantidad'])
@@ -151,20 +183,32 @@ def ObtenerInformacionRelevante(rutaHistorico, numero):
                 categoriaItem = categoriaItem + jsonDatos['Listado'][0]['Items']['Listado'][k]['Categoria']
                 descripcionItem = descripcionItem + jsonDatos['Listado'][0]['Items']['Listado'][k]['Descripcion']
                 
-            hoja.write(i + 1, 12, cantidadItems)
-            hoja.write(i + 1, 5, categoriaItem)
-            hoja.write(i + 1, 6, descripcionItem)
-            hoja.write(i + 1, 7, jsonDatos['Listado'][0]['Nombre'])
-            hoja.write(i + 1, 8, jsonDatos['Listado'][0]['Descripcion'])
-            hoja.write(i + 1, 9, jsonDatos['Listado'][0]['Comprador']['NombreUnidad'])
-            hoja.write(i + 1, 10, jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'])
-            hoja.write(i + 1, 11, jsonDatos['Listado'][0]['MontoEstimado'])
+            hoja.write(contador + 1, 12, cantidadItems)
+            hoja.write(contador + 1, 5, categoriaItem)
+            hoja.write(contador + 1, 6, descripcionItem)
+            hoja.write(contador + 1, 7, jsonDatos['Listado'][0]['Nombre'])
+            hoja.write(contador + 1, 8, jsonDatos['Listado'][0]['Descripcion'])
+            hoja.write(contador + 1, 9, jsonDatos['Listado'][0]['Comprador']['NombreUnidad'])
+            hoja.write(contador + 1, 10, jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'])
+            hoja.write(contador + 1, 11, jsonDatos['Listado'][0]['MontoEstimado'])
+            hoja.write(contador + 1, 12, str(jsonDatos['Listado'][0]['Fechas']['FechaInicio'])[0:10])
+
+            archivo.write(quitarTildes(jsonDatos['Listado'][0]['Nombre'].replace('\n', '. ').replace('\r', '. ')))
+            archivo.write('. ')
+            archivo.write(quitarTildes(jsonDatos['Listado'][0]['Descripcion'].replace('\n', '. ').replace('\r', '. ')))
+            archivo.write('. ')
+            archivo.write(quitarTildes(jsonDatos['Listado'][0]['Comprador']['NombreUnidad'].replace('\n', '. ').replace('\r', '. ')))
+            archivo.write('. ')
+            archivo.write(quitarTildes(jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'].replace('\n', '. ').replace('\r', '. ')))
+            archivo.write('\n')
+            contador = contador + 1
 
         if(i == numero):
             break
         i = i + 1
-        print(i)
+        print("analizando la licitación " + str(i))
     libro.close()
+    archivo.close()
 
 #ruta = input("Por favor ingresar la ruta donde se encuentra el CSV\nRuta: ")
 ruta = "C:/personal/historicoJsonLicitaciones.csv"
