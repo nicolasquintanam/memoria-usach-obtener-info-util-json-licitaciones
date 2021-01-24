@@ -49,35 +49,6 @@ def limpiarJson(entrada):
     entrada = entrada.replace("\"       \"","\",       \"")
     return entrada
 
-def quitarTildes(texto):
-    textoNuevo = texto
-    textoNuevo = textoNuevo.replace('á', 'a')
-    textoNuevo = textoNuevo.replace('é', 'e')
-    textoNuevo = textoNuevo.replace('í', 'i')
-    textoNuevo = textoNuevo.replace('ó', 'o')
-    textoNuevo = textoNuevo.replace('ú', 'u')
-    textoNuevo = textoNuevo.replace('Á', 'A')
-    textoNuevo = textoNuevo.replace('É', 'E')
-    textoNuevo = textoNuevo.replace('Í', 'I')
-    textoNuevo = textoNuevo.replace('Ó', 'O')
-    textoNuevo = textoNuevo.replace('Ú', 'U')
-    textoNuevo = textoNuevo.replace('à', 'a')
-    textoNuevo = textoNuevo.replace('è', 'e')
-    textoNuevo = textoNuevo.replace('ì', 'i')
-    textoNuevo = textoNuevo.replace('ò', 'o')
-    textoNuevo = textoNuevo.replace('ù', 'u') 
-    textoNuevo = textoNuevo.replace('À', 'A')
-    textoNuevo = textoNuevo.replace('È', 'E')
-    textoNuevo = textoNuevo.replace('Ì', 'I')
-    textoNuevo = textoNuevo.replace('Ò', 'O')
-    textoNuevo = textoNuevo.replace('Ù', 'U')
-    textoNuevo = textoNuevo.replace('ñ', 'n')
-    textoNuevo = textoNuevo.replace('Ñ', 'N')
-    textoNuevo = textoNuevo.replace('º', 'numero')
-    textoNuevo = textoNuevo.replace('°', 'numero')
-    
-    return textoNuevo
-
 # Función que permite limpiar el link que viene en el CSV con caracteres válidos.
 # Entrada: string del link que será limpiado.
 # Salida: el mismo link pero sin caracteres inválidos.
@@ -90,7 +61,7 @@ def limpiarLink(entrada):
 # Función que permite crear un CSV con cierta cantidad de líneas y obtener información relevante.
 # Entrada: la ruta de acceso al histórico de licitaciones; y la cantidad de líneas que se quiere obtener.
 # Salida: la creación de un CSV con información relevante del csv de entrada.
-def ObtenerInformacionRelevante(rutaHistorico, numero):
+def ObtenerInformacionRelevante_resumen_xlsx(rutaHistorico, numero):
     numero = int(numero)                                        # Transformando el parámetro a número
     df = pd.read_csv(rutaHistorico, chunksize=1)                # Crear un dataframe a partir del CSV
     i = 0
@@ -98,7 +69,6 @@ def ObtenerInformacionRelevante(rutaHistorico, numero):
     libro = xlsxwriter.Workbook('licitaciones.xlsx')            # Se crea el excel
     hoja = libro.add_worksheet()                                # Se añade una hoja el excel
     centrar = libro.add_format({'align': 'center'})             # Se centran los títulos de las columnas
-    archivo = open('corpus.txt', 'w')
 
     hoja.write(0, 0, "ID", centrar)                             
     hoja.write(0, 1, "JSON", centrar)                           #-------------------------------------------
@@ -192,15 +162,7 @@ def ObtenerInformacionRelevante(rutaHistorico, numero):
             hoja.write(contador + 1, 10, jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'])
             hoja.write(contador + 1, 11, jsonDatos['Listado'][0]['MontoEstimado'])
             hoja.write(contador + 1, 12, str(jsonDatos['Listado'][0]['Fechas']['FechaInicio'])[0:10])
-
-            archivo.write(quitarTildes(jsonDatos['Listado'][0]['Nombre'].replace('\n', '. ').replace('\r', '. ')))
-            archivo.write('. ')
-            archivo.write(quitarTildes(jsonDatos['Listado'][0]['Descripcion'].replace('\n', '. ').replace('\r', '. ')))
-            archivo.write('. ')
-            archivo.write(quitarTildes(jsonDatos['Listado'][0]['Comprador']['NombreUnidad'].replace('\n', '. ').replace('\r', '. ')))
-            archivo.write('. ')
-            archivo.write(quitarTildes(jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'].replace('\n', '. ').replace('\r', '. ')))
-            archivo.write('\n')
+            hoja.write(contador + 1, 12, len(descripcionItem.split(' ')))
             contador = contador + 1
 
         if(i == numero):
@@ -208,10 +170,104 @@ def ObtenerInformacionRelevante(rutaHistorico, numero):
         i = i + 1
         print("analizando la licitación " + str(i))
     libro.close()
+
+def obtener_categoria(categoria_general):
+    return "Construcción"
+
+def ObtenerInformacionRelevante_corpus_txt(rutaHistorico, numero):
+    numero = int(numero)                                        # Transformando el parámetro a número
+    df = pd.read_csv(rutaHistorico, chunksize=1)                # Crear un dataframe a partir del CSV
+    i = 0
+    contador = 0
+    archivo = open('corpus.txt', 'w')
+
+                                                                # ------------------------------------------------------------------------
+    for registro in df:                                         # ---  Por cada registro en el dataframe (CSV), arrojará esto: -----------
+                                                                # ------------------------------------------------------------------------
+                                                                # --------  "codigoexterno;detalleJson;urllicitacion  --------------------
+                                                                # ----  '3021-124-L119';'{listado: {...';'https://mercado'"  -------------
+                                                                # ------------------------------------------------------------------------
+
+        registroString = registro.to_string()                   # Aquí se tiene lo anteriormente mencionado pero como string
+
+        listadoRegistroString = registroString.split('\n')      # Como están separados por un salto de línea, interesa sólo
+                                                                # el segundo elemento, que es el que tiene la información
+
+
+        registroInformacion = listadoRegistroString[1]          # Aquí se tiene sólo la parte "3021-124-L119;{listado: {...;https://mercado..."
+        listadoInformacion = registroInformacion.split(';')     # Aquí se separa lo anterior por ; para tener un listado.
+        
+        largoListadoInfo = len(listadoInformacion)              # Aquí se tiene el largo de lo anterior, ya que puede darse el caso
+                                                                # que dentro del json (texto) tenga puntoycoma, o también puede darse el caso
+                                                                # que no contenga el link de acceso a información complementaria.
+        
+        idLicitacion = ""
+        jsonLicitacion = ""
+        linkLicitacion = ""
+
+        if (largoListadoInfo == 2):                              # Si tiene largo 2, quiere decir que no viene con el link
+            idLicitacion = listadoInformacion[0].strip()
+
+            jsonLicitacion = listadoInformacion[1]                   
+            jsonLicitacion = limpiarJson(jsonLicitacion)           
+            
+            linkLicitacion = "http://www.mercadopublico.cl/Procurement/Modules/RFB/DetailsAcquisition.aspx?idlicitacion=" + idLicitacion
+
+        if(largoListadoInfo > 2):                              # Si tiene largo 3 o mayor
+            idLicitacion = listadoInformacion[0].strip()
+
+            # Ver si el último item tiene un "http:" al principio, eso quiere decir que tiene link
+            if(listadoInformacion[largoListadoInfo - 1][0:4] == "http"):
+                for j in range(1, largoListadoInfo - 1):
+                    jsonLicitacion = jsonLicitacion + listadoInformacion[j]
+                jsonLicitacion = limpiarJson(jsonLicitacion)
+
+                linkLicitacion = listadoInformacion[largoListadoInfo - 1]
+                linkLicitacion = limpiarLink(linkLicitacion)
+            else:
+                for j in range(1, largoListadoInfo):
+                    jsonLicitacion = jsonLicitacion + listadoInformacion[j]
+                jsonLicitacion = limpiarJson(jsonLicitacion)
+
+                linkLicitacion = "http://www.mercadopublico.cl/Procurement/Modules/RFB/DetailsAcquisition.aspx?idlicitacion=" + idLicitacion
+            
+        
+        
+        if(esValidoJson(jsonLicitacion)):
+            jsonDatos = json.loads(jsonLicitacion)
+            cantidadItems = int(jsonDatos['Listado'][0]['Items']['Cantidad'])
+            categoriaItem = ""
+            descripcionItem = ""
+            for k in range(cantidadItems):
+                if(k > 0):
+                    categoriaItem = categoriaItem + "#*#*#*#*#*#*#*#*#*#*"
+                    descripcionItem = descripcionItem + "#*#*#*#*#*#*#*#*#*#*"
+                categoriaItem = categoriaItem + jsonDatos['Listado'][0]['Items']['Listado'][k]['Categoria']
+                descripcionItem = descripcionItem + jsonDatos['Listado'][0]['Items']['Listado'][k]['Descripcion']
+            
+
+            archivo.write(idLicitacion)
+            archivo.write('####')
+            archivo.write(jsonDatos['Listado'][0]['Nombre'].replace('\n', '. ').replace('\r', '. '))
+            archivo.write('. ')
+            archivo.write(jsonDatos['Listado'][0]['Descripcion'].replace('\n', '. ').replace('\r', '. '))
+            archivo.write('. ')
+            archivo.write(jsonDatos['Listado'][0]['Comprador']['NombreUnidad'].replace('\n', '. ').replace('\r', '. '))
+            archivo.write('. ')
+            archivo.write(jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'].replace('\n', '. ').replace('\r', '. '))
+            archivo.write('####')
+            archivo.write(obtener_categoria(categoriaItem))
+            archivo.write('\n')
+            contador = contador + 1
+
+        if(i == numero):
+            break
+        i = i + 1
+        print("analizando la licitación " + str(i))
     archivo.close()
 
 #ruta = input("Por favor ingresar la ruta donde se encuentra el CSV\nRuta: ")
-ruta = "C:/personal/historicoJsonLicitaciones.csv"
+ruta = "/home/nicolasquintanam/Licitaciones/historicoJsonLicitaciones.csv"
 lineaQueSeQuiereObtener = input("Ingresar json que se quiere obtener.\nNúmero: ")
 
-ObtenerInformacionRelevante(ruta, lineaQueSeQuiereObtener)
+ObtenerInformacionRelevante_corpus_txt(ruta, lineaQueSeQuiereObtener)
