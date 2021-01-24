@@ -153,16 +153,12 @@ def ObtenerInformacionRelevante_resumen_xlsx(rutaHistorico, numero):
                 categoriaItem = categoriaItem + jsonDatos['Listado'][0]['Items']['Listado'][k]['Categoria']
                 descripcionItem = descripcionItem + jsonDatos['Listado'][0]['Items']['Listado'][k]['Descripcion']
                 
-            hoja.write(contador + 1, 12, cantidadItems)
             hoja.write(contador + 1, 5, categoriaItem)
             hoja.write(contador + 1, 6, descripcionItem)
             hoja.write(contador + 1, 7, jsonDatos['Listado'][0]['Nombre'])
             hoja.write(contador + 1, 8, jsonDatos['Listado'][0]['Descripcion'])
             hoja.write(contador + 1, 9, jsonDatos['Listado'][0]['Comprador']['NombreUnidad'])
             hoja.write(contador + 1, 10, jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'])
-            hoja.write(contador + 1, 11, jsonDatos['Listado'][0]['MontoEstimado'])
-            hoja.write(contador + 1, 12, str(jsonDatos['Listado'][0]['Fechas']['FechaInicio'])[0:10])
-            hoja.write(contador + 1, 12, len(descripcionItem.split(' ')))
             contador = contador + 1
 
         if(i == numero):
@@ -170,9 +166,6 @@ def ObtenerInformacionRelevante_resumen_xlsx(rutaHistorico, numero):
         i = i + 1
         print("analizando la licitación " + str(i))
     libro.close()
-
-def obtener_categoria(categoria_general):
-    return "Construcción"
 
 def ObtenerInformacionRelevante_corpus_txt(rutaHistorico, numero):
     numero = int(numero)                                        # Transformando el parámetro a número
@@ -248,15 +241,15 @@ def ObtenerInformacionRelevante_corpus_txt(rutaHistorico, numero):
 
             archivo.write(idLicitacion)
             archivo.write('####')
-            archivo.write(jsonDatos['Listado'][0]['Nombre'].replace('\n', '. ').replace('\r', '. '))
-            archivo.write('. ')
-            archivo.write(jsonDatos['Listado'][0]['Descripcion'].replace('\n', '. ').replace('\r', '. '))
-            archivo.write('. ')
-            archivo.write(jsonDatos['Listado'][0]['Comprador']['NombreUnidad'].replace('\n', '. ').replace('\r', '. '))
-            archivo.write('. ')
-            archivo.write(jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'].replace('\n', '. ').replace('\r', '. '))
+            archivo.write(jsonDatos['Listado'][0]['Nombre'].replace('\n', ' . ').replace('\r', ' . '))
+            archivo.write(' . ')
+            archivo.write(jsonDatos['Listado'][0]['Descripcion'].replace('\n', ' . ').replace('\r', ' . '))
+            archivo.write(' . ')
+            archivo.write(jsonDatos['Listado'][0]['Comprador']['NombreUnidad'].replace('\n', ' . ').replace('\r', ' . '))
+            archivo.write(' . ')
+            archivo.write(jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'].replace('\n', ' . ').replace('\r', ' . '))
             archivo.write('####')
-            archivo.write(obtener_categoria(categoriaItem))
+            archivo.write(jsonDatos['Listado'][0]['Items']['Listado'][0]['Categoria'].split(' / ')[0])
             archivo.write('\n')
             contador = contador + 1
 
