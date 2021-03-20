@@ -199,7 +199,11 @@ def ObtenerInformacionRelevante_resumen_xlsx(rutaHistorico, numero, dictionary):
     centrar = libro.add_format({'align': 'center'})             # Se centran los títulos de las columnas
     archivo = open('corpus.txt', 'w')
     archivo_no_c = open('corpus_no_considerado.txt', 'w')
+    archivo_no_considerado_por_duplicidad = open('corpus_no_considerado_por_duplicidad.txt', 'w')
+    archivo_licitaciones_corruptas = open('archivo_con_licitaciones_corruptas.txt', 'w')
+    archivo_con_licitaciones_mas_de_un_item = open('archivo_licitaciones_mas_un_item.txt', 'w')
     licitaciones_no_consideradas = 0
+    licitaciones_consideradas_en_corpus = []
 
     hoja.write(0, 0, "ID", centrar)                             
     hoja.write(0, 1, "JSON", centrar)                           #-------------------------------------------
@@ -301,32 +305,43 @@ def ObtenerInformacionRelevante_resumen_xlsx(rutaHistorico, numero, dictionary):
                 
 
                 if(len(nuevo_listado) >= 3):
-                    hoja.write(contador + 1, 0, idLicitacion)
-                    hoja.write(contador + 1, 1, jsonLicitacion)  
-                    hoja.write(contador + 1, 2, linkLicitacion)             
-                    hoja.write(contador + 1, 3, esValidoJson(jsonLicitacion))
-                    hoja.write(contador + 1, 5, jsonDatos['Listado'][0]['Nombre'])
-                    hoja.write(contador + 1, 6, jsonDatos['Listado'][0]['Descripcion'])
-                    hoja.write(contador + 1, 7, jsonDatos['Listado'][0]['Items']['Listado'][0]['Descripcion'])
-                    hoja.write(contador + 1, 8, jsonDatos['Listado'][0]['Items']['Listado'][0]['Categoria'])
-                    hoja.write(contador + 1, 9, jsonDatos['Listado'][0]['Comprador']['NombreUnidad'])
-                    hoja.write(contador + 1, 10, jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'])
-                    hoja.write(contador + 1, 11, str(jsonDatos['Listado'][0]['Fechas']['FechaInicio'])[0:10])
+                    if(idLicitacion not in licitaciones_consideradas_en_corpus):
+                        hoja.write(contador + 1, 0, idLicitacion)
+                        hoja.write(contador + 1, 1, jsonLicitacion)  
+                        hoja.write(contador + 1, 2, linkLicitacion)             
+                        hoja.write(contador + 1, 3, esValidoJson(jsonLicitacion))
+                        hoja.write(contador + 1, 5, jsonDatos['Listado'][0]['Nombre'])
+                        hoja.write(contador + 1, 6, jsonDatos['Listado'][0]['Descripcion'])
+                        hoja.write(contador + 1, 7, jsonDatos['Listado'][0]['Items']['Listado'][0]['Descripcion'])
+                        hoja.write(contador + 1, 8, jsonDatos['Listado'][0]['Items']['Listado'][0]['Categoria'])
+                        hoja.write(contador + 1, 9, jsonDatos['Listado'][0]['Comprador']['NombreUnidad'])
+                        hoja.write(contador + 1, 10, jsonDatos['Listado'][0]['Comprador']['NombreOrganismo'])
+                        hoja.write(contador + 1, 11, str(jsonDatos['Listado'][0]['Fechas']['FechaInicio'])[0:10])
 
 
 
-                    archivo.write(idLicitacion)
-                    archivo.write('####')
-                    archivo.write(texto_reducido)
-                    archivo.write('####')
-                    archivo.write(categoria_final)
-                    archivo.write('\n')
-                    contador = contador + 1
+                        archivo.write(idLicitacion)
+                        archivo.write('####')
+                        archivo.write(texto_reducido)
+                        archivo.write('####')
+                        archivo.write(categoria_final)
+                        archivo.write('\n')
+                        contador = contador + 1
+
+                        licitaciones_consideradas_en_corpus.append(idLicitacion)
+                    else:
+                        archivo_no_considerado_por_duplicidad.write(idLicitacion)
+                        archivo_no_considerado_por_duplicidad.write('\n')
                 else:
                     archivo_no_c.write(texto_licitacion)
                     archivo_no_c.write('\n')
                     licitaciones_no_consideradas += 1
-
+            else:
+                archivo_con_licitaciones_mas_de_un_item.write(idLicitacion)
+                archivo_con_licitaciones_mas_de_un_item.write('\n')
+        else:
+            archivo_licitaciones_corruptas.write(idLicitacion)
+            archivo_licitaciones_corruptas.write('\n')
         if(i == numero):
             break
         i = i + 1
@@ -334,6 +349,9 @@ def ObtenerInformacionRelevante_resumen_xlsx(rutaHistorico, numero, dictionary):
     print('no consideré ' + str(licitaciones_no_consideradas) + 'licitaciones')
     archivo.close()
     archivo_no_c.close()
+    archivo_no_considerado_por_duplicidad.close()
+    archivo_con_licitaciones_corruptas.close()
+    archivo_con_licitaciones_mas_de_un_item.close()
     libro.close()
 
 
