@@ -350,7 +350,7 @@ def ObtenerInformacionRelevante_resumen_xlsx(rutaHistorico, numero, dictionary):
     archivo.close()
     archivo_no_c.close()
     archivo_no_considerado_por_duplicidad.close()
-    archivo_con_licitaciones_corruptas.close()
+    archivo_licitaciones_corruptas.close()
     archivo_con_licitaciones_mas_de_un_item.close()
     libro.close()
 
@@ -361,6 +361,6 @@ dictionary = create_category_dictionary()
 ruta = "/home/nicolasquintanam/Licitaciones/historicoJsonLicitaciones.csv"
 #lineaQueSeQuiereObtener = input("Ingresar json que se quiere obtener.\nNúmero: ")
 start_time = time()
-ObtenerInformacionRelevante_resumen_xlsx(ruta, 100000, dictionary)
+ObtenerInformacionRelevante_resumen_xlsx(ruta, 10, dictionary)
 elapsed_time = time() - start_time
 print("Tiempo utilizado: %.10f segundos." % elapsed_time)
